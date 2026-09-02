@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FieldSight AI — Glaucoma Brand Engagement Engine</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @font-face{font-family:'sys';src:local('Georgia');}
+  :root{
+    --ink:#12181A;
+    --paper:#F5F2EA;
+    --sage:#5E8266;
+    --sage-dim:#3E5843;
+    --teal:#31575B;
+    --gold:#C79A34;
+    --rust:#A85238;
+    --line:rgba(18,24,26,0.14);
+    --line-soft:rgba(245,242,234,0.16);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{background:var(--ink); color:var(--paper); font-family:'Inter',-apple-system,sans-serif; overflow-x:hidden;}
+  body{font-size:15px; line-height:1.5;}
+
+  ::selection{background:var(--sage); color:var(--ink);}
+
+  .display{font-family:'Newsreader','Georgia',serif; font-optical-sizing:auto;}
+  .mono{font-family:'IBM Plex Mono','Courier New',monospace; letter-spacing:0.02em;}
+
+  /* ---------- Layout shell ---------- */
+  .shell{max-width:1180px; margin:0 auto; padding:0 28px;}
+
+  header.top{
+    position:sticky; top:0; z-index:50;
+    background:rgba(18,24,26,0.92); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .top-inner{display:flex; align-items:center; justify-content:space-between; padding:16px 0;}
+  .brandmark{display:flex; align-items:center; gap:12px;}
+  .brandmark .ring{width:30px; height:30px; border-radius:50%; border:1.5px solid var(--sage); position:relative; flex-shrink:0;}
+  .brandmark .ring::before{content:''; position:absolute; inset:6px; border-radius:50%; border:1px solid var(--sage); opacity:0.55;}
+  .brandmark .ring::after{content:''; position:absolute; inset:12px; border-radius:50%; background:var(--gold);}
+  .brandmark .word{font-family:'Newsreader',serif; font-size:20px; letter-spacing:0.01em;}
+  .brandmark .word b{font-weight:600; color:var(--paper);}
+  .brandmark .word span{color:var(--sage); font-style:italic;}
+
+  nav.tabs{display:flex; gap:2px; flex-wrap:wrap;}
+  nav.tabs button{
+    background:none; border:none; color:rgba(245,242,234,0.55);
+    font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.04em; text-transform:uppercase;
+    padding:9px 13px; cursor:pointer; border-radius:3px; transition:all .15s ease;
+    white-space:nowrap;
+  }
+  nav.tabs button:hover{color:var(--paper); background:rgba(245,242,234,0.06);}
+  nav.tabs button.active{color:var(--ink); background:var(--sage);}
+
+  @media (max-width:900px){
+    .top-inner{flex-direction:column; align-items:flex-start; gap:12px;}
+    nav.tabs{overflow-x:auto; width:100%; padding-bottom:4px;}
+  }
+
+  main{padding:56px 0 100px;}
+  section.view{display:none; animation:fadein .4s ease;}
+  section.view.active{display:block;}
+  @keyframes fadein{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.12em; text-transform:uppercase; color:var(--sage); margin-bottom:10px;}
+  h1.pagehead{font-family:'Newsreader',serif; font-size:44px; font-weight:500; line-height:1.08; margin-bottom:14px; max-width:780px;}
+  h1.pagehead i{color:var(--sage); font-style:italic; font-weight:400;}
+  p.lede{color:rgba(245,242,234,0.68); max-width:620px; font-size:15.5px; line-height:1.65; margin-bottom:8px;}
+
+  .grain-rule{height:1px; background:linear-gradient(90deg, var(--sage), transparent 65%); margin:34px 0;}
+
+  /* card */
+  .card{background:rgba(245,242,234,0.035); border:1px solid var(--line-soft); border-radius:6px; padding:24px;}
+  .card h3{font-family:'Newsreader',serif; font-weight:500; font-size:20px; margin-bottom:4px;}
+  .card .sub{color:rgba(245,242,234,0.5); font-size:12.5px; margin-bottom:16px; font-family:'IBM Plex Mono',monospace;}
+
+  /* ================= HOME ================= */
+  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line-soft); border:1px solid var(--line-soft); margin:40px 0;}
+  .stat{background:var(--ink); padding:22px 20px;}
+  .stat .n{font-family:'Newsreader',serif; font-size:32px; color:var(--sage);}
+  .stat .l{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.06em; color:rgba(245,242,234,0.5); margin-top:4px;}
+  @media(max-width:800px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+
+  .module-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:28px;}
+  @media(max-width:900px){.module-grid{grid-template-columns:1fr;}}
+  .mod{border:1px solid var(--line-soft); border-radius:6px; padding:20px; cursor:pointer; transition:all .2s ease; position:relative; overflow:hidden;}
+  .mod:hover{border-color:var(--sage); background:rgba(94,130,102,0.06); transform:translateY(-2px);}
+  .mod .num{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--gold);}
+  .mod h4{font-family:'Newsreader',serif; font-size:18px; margin:8px 0 6px; font-weight:500;}
+  .mod p{font-size:13px; color:rgba(245,242,234,0.55); line-height:1.5;}
+
+  /* perimetry signature graphic */
+  .perimetry-hero{display:flex; align-items:center; gap:48px; margin-top:36px;}
+  @media(max-width:800px){.perimetry-hero{flex-direction:column;}}
+  .perimetry-svg{flex-shrink:0;}
+  .perimetry-legend{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:rgba(245,242,234,0.6); line-height:2.1;}
+  .perimetry-legend .row{display:flex; align-items:center; gap:10px;}
+  .dot{width:9px;height:9px;border-radius:50%; display:inline-block;}
+
+  /* ================= TARGETING ================= */
+  .weights{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:26px;}
+  @media(max-width:750px){.weights{grid-template-columns:1fr;}}
+  .weight-item label{display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.04em; color:rgba(245,242,234,0.7); margin-bottom:6px;}
+  .weight-item label .val{color:var(--gold);}
+  input[type=range]{width:100%; accent-color:var(--sage); height:3px; cursor:pointer;}
+
+  table{width:100%; border-collapse:collapse; margin-top:6px;}
+  th{text-align:left; font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:rgba(245,242,234,0.45); padding:10px 12px; border-bottom:1px solid var(--line-soft);}
+  td{padding:12px; border-bottom:1px solid rgba(245,242,234,0.06); font-size:13.5px; vertical-align:middle;}
+  tr.tier-A td:first-child{border-left:2px solid var(--sage);}
+  tr.tier-B td:first-child{border-left:2px solid var(--gold);}
+  tr.tier-C td:first-child{border-left:2px solid rgba(245,242,234,0.2);}
+  .score-bar-bg{background:rgba(245,242,234,0.08); border-radius:3px; height:6px; width:100px; overflow:hidden;}
+  .score-bar-fill{background:var(--sage); height:100%; border-radius:3px;}
+  .tier-badge{font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 7px; border-radius:10px; letter-spacing:0.05em;}
+  .tier-badge.A{background:rgba(94,130,102,0.2); color:var(--sage);}
+  .tier-badge.B{background:rgba(199,154,52,0.18); color:var(--gold);}
+  .tier-badge.C{background:rgba(245,242,234,0.08); color:rgba(245,242,234,0.5);}
+
+  /* ================= SHIFT DETECTION ================= */
+  .alert-feed{display:flex; flex-direction:column; gap:10px; margin-top:18px;}
+  .alert{border:1px solid var(--line-soft); border-left:3px solid var(--rust); border-radius:4px; padding:14px 16px; display:flex; justify-content:space-between; align-items:center; gap:16px; cursor:pointer; transition:background .15s;}
+  .alert:hover{background:rgba(245,242,234,0.04);}
+  .alert.warn{border-left-color:var(--gold);}
+  .alert.info{border-left-color:var(--sage);}
+  .alert .meta{font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(245,242,234,0.45); margin-top:3px;}
+  .alert .name{font-size:14.5px;}
+  .alert .delta{font-family:'IBM Plex Mono',monospace; font-size:13px;}
+  .delta.down{color:var(--rust);}
+  .delta.up{color:var(--sage);}
+  .playbook{display:none; margin-top:10px; padding-top:10px; border-top:1px dashed var(--line-soft); font-size:13px; color:rgba(245,242,234,0.65);}
+  .playbook.open{display:block;}
+  .playbook ol{margin-left:18px; margin-top:6px;}
+  .playbook li{margin-bottom:4px;}
+
+  /* ================= FORECAST ================= */
+  .chart-wrap{background:rgba(245,242,234,0.02); border:1px solid var(--line-soft); border-radius:6px; padding:20px; margin-top:20px;}
+  .forecast-controls{display:flex; gap:24px; margin-top:20px; flex-wrap:wrap;}
+  .forecast-controls .weight-item{min-width:220px; flex:1;}
+  .flag-row{display:flex; gap:10px; margin-top:20px; flex-wrap:wrap;}
+  .flag{font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:7px 12px; border-radius:4px; border:1px solid var(--rust); color:var(--rust); background:rgba(168,82,56,0.08);}
+
+  /* ================= DETAILING ================= */
+  .doctor-picker{display:flex; gap:8px; flex-wrap:wrap; margin:18px 0 26px;}
+  .doctor-chip{font-family:'IBM Plex Mono',monospace; font-size:12px; padding:8px 14px; border:1px solid var(--line-soft); border-radius:20px; cursor:pointer; color:rgba(245,242,234,0.7); transition:all .15s;}
+  .doctor-chip.active{background:var(--sage); border-color:var(--sage); color:var(--ink);}
+  .detail-output{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  @media(max-width:800px){.detail-output{grid-template-columns:1fr;}}
+  .detail-output .card ul{margin-left:18px; margin-top:8px; font-size:13.5px; color:rgba(245,242,234,0.75); line-height:1.8;}
+
+  /* ================= WHATSAPP ================= */
+  .phone{max-width:340px; margin:20px auto 0; background:#0B141A; border-radius:20px; border:6px solid #1a2226; overflow:hidden;}
+  .phone-head{background:var(--teal); padding:14px 16px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--paper);}
+  .chat{padding:16px; display:flex; flex-direction:column; gap:8px; min-height:340px;}
+  .bubble{max-width:78%; padding:9px 12px; border-radius:10px; font-size:13px; line-height:1.4;}
+  .bubble.bot{background:#1F2C34; color:var(--paper); align-self:flex-start; border-top-left-radius:2px;}
+  .bubble.user{background:var(--sage-dim); color:var(--paper); align-self:flex-end; border-top-right-radius:2px;}
+  .chat-flows{display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; justify-content:center;}
+
+  /* ================= SOCIAL LISTENING ================= */
+  .listen-feed{display:flex; flex-direction:column; gap:1px; background:var(--line-soft); border:1px solid var(--line-soft); margin-top:20px;}
+  .listen-item{background:var(--ink); padding:16px 18px; display:grid; grid-template-columns:110px 1fr 100px; gap:16px; align-items:start;}
+  @media(max-width:700px){.listen-item{grid-template-columns:1fr; gap:6px;}}
+  .listen-item .src{font-family:'IBM Plex Mono',monospace; font-size:10.5px; text-transform:uppercase; color:var(--sage); letter-spacing:0.04em;}
+  .listen-item .txt{font-size:13.5px; color:rgba(245,242,234,0.8); line-height:1.5;}
+  .listen-item .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; padding:3px 8px; border-radius:10px; text-align:center; height:fit-content; justify-self:end;}
+  .tag.adr{background:rgba(168,82,56,0.18); color:var(--rust);}
+  .tag.pref{background:rgba(199,154,52,0.18); color:var(--gold);}
+  .tag.comp{background:rgba(49,87,91,0.4); color:#7fb8bd;}
+  .tag.unmet{background:rgba(94,130,102,0.2); color:var(--sage);}
+
+  footer{border-top:1px solid var(--line-soft); padding:26px 0; margin-top:40px;}
+  footer p{font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(245,242,234,0.4); text-align:center;}
+
+  .btn{font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; background:var(--sage); color:var(--ink); border:none; padding:9px 16px; border-radius:4px; cursor:pointer; transition:opacity .15s;}
+  .btn:hover{opacity:0.85;}
+  .btn.ghost{background:none; border:1px solid var(--line-soft); color:var(--paper);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="shell top-inner">
+    <div class="brandmark">
+      <div class="ring"></div>
+      <div class="word"><b>FieldSight</b> <span>AI</span></div>
+    </div>
+    <nav class="tabs">
+      <button data-view="home" class="active">Overview</button>
+      <button data-view="targeting">01 · HCP Targeting</button>
+      <button data-view="shift">02 · Shift Detection</button>
+      <button data-view="forecast">03 · Demand Forecast</button>
+      <button data-view="detailing">04 · Detailing</button>
+      <button data-view="whatsapp">05 · WhatsApp Bot</button>
+      <button data-view="listening">06 · Social Listening</button>
+      <button data-view="rcpa">07 · RCPA</button>
+      <button data-view="digital">08 · Digital HCP</button>
+    </nav>
+  </div>
+</header>
+
+<main class="shell">
+
+  <!-- ================= HOME ================= -->
+  <section class="view active" id="home">
+    <div class="eyebrow">Brand Engagement Model — Glaucoma Portfolio</div>
+    <h1 class="pagehead">One engine, six signals — <i>a working model</i> for AI-led field execution.</h1>
+    <p class="lede">FieldSight fuses IQVIA prescription data, CRM visit logs, and unstructured patient/HCP conversation into a single scoring and decisioning layer: it ranks doctors, flags prescriber drift, forecasts stock-outs, personalizes detailing, automates patient touchpoints, and mines social signal for adverse events and unmet need — the six modules from the brand plan, built and running.</p>
+
+    <div class="stat-row">
+      <div class="stat"><div class="n">₹23<span style="font-size:16px;">Cr</span></div><div class="l">Full-year sales target</div></div>
+      <div class="stat"><div class="n">₹2–3<span style="font-size:16px;">Cr</span></div><div class="l">Launch-phase target</div></div>
+      <div class="stat"><div class="n">Top 20%</div><div class="l">HCPs → 80% of Rx</div></div>
+      <div class="stat"><div class="n">19+</div><div class="l">Competing brands in DFT</div></div>
+    </div>
+
+    <div class="perimetry-hero">
+      <svg class="perimetry-svg" width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(245,242,234,0.12)" stroke-width="1"/>
+        <circle cx="110" cy="110" r="65" fill="none" stroke="rgba(245,242,234,0.12)" stroke-width="1"/>
+        <circle cx="110" cy="110" r="35" fill="none" stroke="rgba(245,242,234,0.12)" stroke-width="1"/>
+        <line x1="15" y1="110" x2="205" y2="110" stroke="rgba(245,242,234,0.08)"/>
+        <line x1="110" y1="15" x2="110" y2="205" stroke="rgba(245,242,234,0.08)"/>
+        <polygon points="110,35 155,65 168,110 155,155 110,185 65,155 52,110 65,65" fill="rgba(94,130,102,0.22)" stroke="#5E8266" stroke-width="1.5"/>
+        <circle cx="110" cy="35" r="4" fill="#5E8266"/>
+        <circle cx="155" cy="65" r="4" fill="#5E8266"/>
+        <circle cx="168" cy="110" r="4" fill="#C79A34"/>
+        <circle cx="155" cy="155" r="4" fill="#A85238"/>
+        <circle cx="110" cy="185" r="4" fill="#5E8266"/>
+        <circle cx="65" cy="155" r="4" fill="#5E8266"/>
+        <circle cx="52" cy="110" r="4" fill="#C79A34"/>
+        <circle cx="65" cy="65" r="4" fill="#5E8266"/>
+        <circle cx="110" cy="110" r="2.5" fill="rgba(245,242,234,0.5)"/>
+      </svg>
+      <div class="perimetry-legend">
+        <div class="row"><span class="dot" style="background:#5E8266"></span> Signal within healthy field — engaged, on-target</div>
+        <div class="row"><span class="dot" style="background:#C79A34"></span> Early deviation — needs a nudge (bot, sample, CME)</div>
+        <div class="row"><span class="dot" style="background:#A85238"></span> Field loss — prescriber drift or stock risk</div>
+        <p style="margin-top:14px; max-width:280px; color:rgba(245,242,234,0.4); font-style:italic;">Every module below plots onto this same field — the way a glaucoma patient's vision is mapped, we map a brand's engagement.</p>
+      </div>
+    </div>
+
+    <div class="grain-rule"></div>
+
+    <div class="eyebrow">The six modules</div>
+    <div class="module-grid">
+      <div class="mod" data-view="targeting"><div class="num">01</div><h4>AI-Powered HCP Targeting</h4><p>Ranks every doctor on Rx volume, growth potential, brand loyalty and patient load — tells your MR who to see this week, and why.</p></div>
+      <div class="mod" data-view="shift"><div class="num">02</div><h4>Prescriber Shift Detection</h4><p>Watches monthly IQVIA + territory sales data for drift and triggers a same-week recovery playbook automatically.</p></div>
+      <div class="mod" data-view="forecast"><div class="num">03</div><h4>AI Demand Forecasting</h4><p>Projects 6–8 week demand per territory so distributor inventory is placed before stock-outs happen, not after.</p></div>
+      <div class="mod" data-view="detailing"><div class="num">04</div><h4>Personalized Dr. Detailing</h4><p>Builds a customized digital detail per doctor, from specialty and patient profile to prior prescribing behaviour.</p></div>
+      <div class="mod" data-view="whatsapp"><div class="num">05</div><h4>WhatsApp Patient Bot</h4><p>Automated refill nudges, therapy-withdrawal alerts and Patient Assistance Program support, timed to real adherence risk.</p></div>
+      <div class="mod" data-view="listening"><div class="num">06</div><h4>AI Social Listening (NLP)</h4><p>Reads patient forums, glaucoma community groups and doctor discussion boards to surface ADRs, preferences and unmet need.</p></div>
+      <div class="mod" data-view="rcpa"><div class="num">07</div><h4>RCPA — Chemist Audit</h4><p>Tracks brand offtake at retail chemist level by tier, flags stock-outs and competitor pressure, territory: Kakinada.</p></div>
+      <div class="mod" data-view="digital"><div class="num">08</div><h4>Digital HCP Engagement</h4><p>Hybrid digital-physical model — WhatsApp detailing, virtual CME, e-sampling — wired to RCPA-triggered alerts.</p></div>
+    </div>
+  </section>
+
+  <!-- ================= 01 TARGETING ================= -->
+  <section class="view" id="targeting">
+    <div class="eyebrow">Module 01 · Territory: Kakinada</div>
+    <h1 class="pagehead">AI-HCP Targeting <i>& ranking</i></h1>
+    <p class="lede">Built from primary RCPA field research across Kakinada's ophthalmology base — Nayana Eye Care, Srikiran Eye Hospital, Vasan Eye Care Hospital, SK Superspeciality Hospital, Apollo Hospitals and independent practice. Each HCP's weekly glaucoma patient volume and stated MISOPT preference were captured directly; the model converts that into a priority score and an action tag — retain-and-grow vs. conversion target — live as you re-weight the signals.</p>
+
+    <div class="card" style="margin-top:28px;">
+      <h3>Scoring weights</h3>
+      <div class="sub">Σ auto-normalized to 100% · built from field-captured signals only</div>
+      <div class="weights">
+        <div class="weight-item"><label>Patient Volume <span class="val" id="wRxVal">55%</span></label><input type="range" id="wRx" min="0" max="100" value="55"></div>
+        <div class="weight-item"><label>MISOPT Preference Strength <span class="val" id="wGrowthVal">45%</span></label><input type="range" id="wGrowth" min="0" max="100" value="45"></div>
+      </div>
+      <table>
+        <thead><tr><th>HCP</th><th>Institution</th><th>Glaucoma Pts/wk</th><th>Current Brand</th><th>MISOPT Preference</th><th>Main Reason</th><th>Score</th><th>Tier</th><th>Action</th></tr></thead>
+        <tbody id="hcpTable"></tbody>
+      </table>
+      <p style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(245,242,234,0.4); margin-top:14px;">Model: score = wVol × norm(patients/wk) + wPref × preference weight (High=100, Medium=55, Low=20). Tier A ≥ 70, Tier B ≥ 45, else Tier C. Action = Retain & Grow if current brand is MISOPT, else Conversion Target.</p>
+      <p style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:rgba(245,242,234,0.32); margin-top:6px;">Doctor names, institutions and field figures sourced from primary RCPA research conducted during the Micro Labs internship, Kakinada territory.</p>
+    </div>
+  </section>
+
+
+  <!-- ================= 02 SHIFT DETECTION ================= -->
+  <section class="view" id="shift">
+    <div class="eyebrow">Module 02</div>
+    <h1 class="pagehead">Prescriber shift <i>detection</i></h1>
+    <p class="lede">Genesis → MIS ingests monthly IQVIA + territory sales data continuously. When a prescriber's run-rate breaks its trend, the model raises an alert and attaches a recovery playbook — immediate scientific detailing, additional samples, a CME invite within 7 days, and a scheduled follow-up.</p>
+
+    <div class="card" style="margin-top:28px;">
+      <h3>Live monitoring feed</h3>
+      <div class="sub">IQVIA monthly sales data · click an alert to open its playbook</div>
+      <div class="alert-feed" id="alertFeed"></div>
+    </div>
+  </section>
+
+  <!-- ================= 03 FORECAST ================= -->
+  <section class="view" id="forecast">
+    <div class="eyebrow">Module 03</div>
+    <h1 class="pagehead">AI demand <i>forecasting</i></h1>
+    <p class="lede">Projects prescriber-level demand 6–8 weeks out from trailing Rx velocity and seasonality, so distributor inventory lands before expected demand — not after a stock-out has already cost you share.</p>
+
+    <div class="chart-wrap"><canvas id="forecastChart" height="90"></canvas></div>
+
+    <div class="forecast-controls">
+      <div class="weight-item"><label>Demand growth assumption <span class="val" id="growthAssumeVal">+8%</span></label><input type="range" id="growthAssume" min="-10" max="30" value="8"></div>
+      <div class="weight-item"><label>Lead-time buffer (weeks) <span class="val" id="leadTimeVal">6</span></label><input type="range" id="leadTime" min="4" max="10" value="6"></div>
+    </div>
+
+    <div class="flag-row" id="stockFlags"></div>
+  </section>
+
+  <!-- ================= 04 DETAILING ================= -->
+  <section class="view" id="detailing">
+    <div class="eyebrow">Module 04</div>
+    <h1 class="pagehead">Personalized doctor <i>detailing</i></h1>
+    <p class="lede">One customized digital detail per doctor — built from specialty, patient profile and prior prescribing — instead of the same generic deck for every HCP on the list.</p>
+
+    <div class="doctor-picker" id="detailPicker"></div>
+    <div class="detail-output" id="detailOutput"></div>
+  </section>
+
+  <!-- ================= 05 WHATSAPP ================= -->
+  <section class="view" id="whatsapp">
+    <div class="eyebrow">Module 05</div>
+    <h1 class="pagehead">WhatsApp patient <i>bot</i></h1>
+    <p class="lede">Automated, timed touchpoints keyed to real adherence risk — a refill reminder before the drop runs out, a withdrawal check when therapy lapses, and Patient Assistance Program support on request.</p>
+
+    <div class="phone">
+      <div class="phone-head">FieldSight Care Bot · online</div>
+      <div class="chat" id="chatWindow"></div>
+    </div>
+    <div class="chat-flows">
+      <button class="btn" data-flow="refill">Simulate: Refill reminder</button>
+      <button class="btn" data-flow="withdraw">Simulate: Withdrawal check-in</button>
+      <button class="btn" data-flow="pap">Simulate: PAP support</button>
+    </div>
+  </section>
+
+  <!-- ================= 06 LISTENING ================= -->
+  <section class="view" id="listening">
+    <div class="eyebrow">Module 06</div>
+    <h1 class="pagehead">AI social listening <i>(NLP)</i></h1>
+    <p class="lede">NLP monitors patient forums, glaucoma Facebook groups, X, HCP communities and doctor discussion boards. The model classifies each mention as an adverse event, a patient preference, a competitor perception, or an emerging treatment need.</p>
+
+    <div class="listen-feed" id="listenFeed"></div>
+    <p style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(245,242,234,0.4); margin-top:16px;">Combined with IQVIA data + CRM + Dr. Rx + pharmacy sales, this becomes one closed-loop view of demand, sentiment and safety.</p>
+  </section>
+
+  <!-- ================= 07 RCPA ================= -->
+  <section class="view" id="rcpa">
+    <div class="eyebrow">Module 07 · Territory: Kakinada</div>
+    <h1 class="pagehead">RCPA <i>— retail chemist audit</i></h1>
+    <p class="lede">Prescription data shows intent; RCPA shows what actually left the shelf. 20 Kakinada pharmacies audited across MISOPT and three direct competitors — Dorzox, Dortas, Dorsun. Chemists are tiered by total glaucoma Rx volume, and audit frequency follows tier.</p>
+
+    <div class="stat-row" id="rcpaStats" style="margin:28px 0;"></div>
+
+    <div class="card">
+      <h3>Chemist audit log</h3>
+      <div class="sub">Class A (Rx ≥ 30) audited weekly · Class B (24–29) fortnightly · Class C (&lt;24) monthly</div>
+      <div style="display:flex; gap:8px; margin-bottom:16px;">
+        <button class="btn ghost rcpa-filter active" data-tier="all">All</button>
+        <button class="btn ghost rcpa-filter" data-tier="A">Class A</button>
+        <button class="btn ghost rcpa-filter" data-tier="B">Class B</button>
+        <button class="btn ghost rcpa-filter" data-tier="C">Class C</button>
+      </div>
+      <table>
+        <thead><tr><th>Chemist</th><th>Locality</th><th>Class</th><th>Total Rx</th><th>MISOPT</th><th>Dorzox</th><th>Dortas</th><th>Dorsun</th><th>Other</th><th>Share</th></tr></thead>
+        <tbody id="rcpaTable"></tbody>
+      </table>
+      <p style="font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:rgba(245,242,234,0.32); margin-top:14px;">Chemist names, localities and Rx counts sourced from primary RCPA audit conducted during the Micro Labs internship, Kakinada territory.</p>
+    </div>
+  </section>
+
+  <!-- ================= 08 DIGITAL HCP ================= -->
+  <section class="view" id="digital">
+    <div class="eyebrow">Module 08 · Territory: Kakinada</div>
+    <h1 class="pagehead">Digital HCP <i>engagement model</i></h1>
+    <p class="lede">Hybrid by design: digital carries frequency and reminders, the physical visit stays the trust-building moment. Every RCPA stock-out or share drop below feeds a digital touch automatically before the next MR visit.</p>
+
+    <div class="stat-row" id="digitalStats" style="margin:28px 0;"></div>
+
+    <div class="detail-output">
+      <div class="card">
+        <h3>Digital touch queue</h3>
+        <div class="sub">Auto-generated from RCPA + shift signals</div>
+        <div class="alert-feed" id="digitalQueue"></div>
+      </div>
+      <div class="card">
+        <h3>Engagement channel mix</h3>
+        <div class="sub">Kakinada HCP base · last 30 days</div>
+        <div class="chart-wrap" style="margin-top:0;"><canvas id="digitalChart" height="180"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer><div class="shell"><p>FIELDSIGHT AI — GLAUCOMA BRAND ENGAGEMENT MODEL — DEMO BUILD</p></div></footer>
+
+<script>
+// ---------- NAV ----------
+const tabs = document.querySelectorAll('nav.tabs button');
+const mods = document.querySelectorAll('.mod');
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById(name).classList.add('active');
+  tabs.forEach(t=>t.classList.toggle('active', t.dataset.view===name));
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+tabs.forEach(t=>t.addEventListener('click', ()=>showView(t.dataset.view)));
+mods.forEach(m=>m.addEventListener('click', ()=>showView(m.dataset.view)));
+
+// ================= MODULE 01: HCP TARGETING — KAKINADA (RCPA field data) =================
+const hcps = [
+  {name:'Dr. Hasika Ravula', inst:'Nayana Eye Care', pts:18, brand:'Misopt', pref:'High', reason:'Efficacy & tolerability'},
+  {name:'Dr. Sriram Ravula', inst:'Suryaraopet (Independent)', pts:25, brand:'Dorzox', pref:'Medium', reason:'Brand familiarity'},
+  {name:'Dr. Rajendra Krishna Murthy Metlapalli', inst:'Srikiran Eye Hospital', pts:30, brand:'Misopt', pref:'High', reason:'Clinical response'},
+  {name:'Dr. C. Geetha Priya', inst:'Srikiran Eye Hospital', pts:27, brand:'Misopt', pref:'High', reason:'Patient response'},
+  {name:'Dr. B. Subba Rao', inst:'SK Superspeciality Hospital', pts:32, brand:'Dorzox', pref:'Medium', reason:'Established brand'},
+  {name:'Dr. Sri Monica A', inst:'Vasan Eye Care Hospital', pts:29, brand:'Misopt', pref:'High', reason:'Efficacy + availability'},
+  {name:'Dr. S. Veerabhadra Raju', inst:'Apollo Hospitals, Ramaraopet', pts:35, brand:'Dorzox', pref:'Medium', reason:'Brand confidence'},
+  {name:'Doctor 8', inst:'Kakinada', pts:22, brand:'Misopt', pref:'High', reason:'Affordability + response'},
+];
+const prefWeight = {High:100, Medium:55, Low:20};
+function renderHCP(){
+  const wVol = +document.getElementById('wRx').value;
+  const wPref = +document.getElementById('wGrowth').value;
+  const total = wVol+wPref || 1;
+  document.getElementById('wRxVal').textContent = Math.round(wVol/total*100)+'%';
+  document.getElementById('wGrowthVal').textContent = Math.round(wPref/total*100)+'%';
+
+  const maxPts = Math.max(...hcps.map(h=>h.pts));
+  const scored = hcps.map(h=>{
+    const volNorm = (h.pts/maxPts)*100;
+    const score = (volNorm*wVol + prefWeight[h.pref]*wPref)/total;
+    return {...h, score};
+  }).sort((a,b)=>b.score-a.score);
+
+  const tbody = document.getElementById('hcpTable');
+  tbody.innerHTML = scored.map(h=>{
+    const tier = h.score>=70?'A':h.score>=45?'B':'C';
+    const action = h.brand==='Misopt' ? 'Retain & Grow' : 'Conversion Target';
+    return `<tr class="tier-${tier}">
+      <td>${h.name}</td>
+      <td style="color:rgba(245,242,234,0.5); font-size:12px;">${h.inst}</td>
+      <td>${h.pts}</td>
+      <td style="color:${h.brand==='Misopt'?'#5E8266':'#A85238'};">${h.brand}</td>
+      <td>${h.pref}</td>
+      <td style="font-size:12px; color:rgba(245,242,234,0.55);">${h.reason}</td>
+      <td><div style="display:flex; align-items:center; gap:8px;"><div class="score-bar-bg"><div class="score-bar-fill" style="width:${h.score}%;"></div></div><span class="mono" style="font-size:12px;">${h.score.toFixed(0)}</span></div></td>
+      <td><span class="tier-badge ${tier}">Tier ${tier}</span></td>
+      <td style="font-size:12.5px; color:${h.brand==='Misopt'?'var(--sage)':'var(--gold)'};">${action}</td>
+    </tr>`;
+  }).join('');
+}
+['wRx','wGrowth'].forEach(id=>document.getElementById(id).addEventListener('input', renderHCP));
+renderHCP();
+
+// ================= MODULE 02: SHIFT DETECTION =================
+const alerts = [
+  {name:'Dr. B. Subba Rao', territory:'SK Superspeciality Hospital', delta:-34, level:'alert', trend:'MISOPT losing share to Dorzox — 3-month decline vs. rolling average'},
+  {name:'Dr. Sriram Ravula', territory:'Suryaraopet (Independent)', delta:-18, level:'warn', trend:'Dorzox preference holding steady, single-month dip in MISOPT trial'},
+  {name:'Dr. Rajendra Krishna Murthy Metlapalli', territory:'Srikiran Eye Hospital', delta:+22, level:'info', trend:'Sustained MISOPT upswing — reinforce, don\'t disrupt'},
+  {name:'Dr. S. Veerabhadra Raju', territory:'Apollo Hospitals, Ramaraopet', delta:-41, level:'alert', trend:'High patient volume, still Dorzox-loyal — priority conversion target'},
+];
+const feed = document.getElementById('alertFeed');
+feed.innerHTML = alerts.map((a,i)=>`
+  <div class="alert ${a.level}" data-i="${i}">
+    <div>
+      <div class="name">${a.name} <span style="color:rgba(245,242,234,0.4); font-size:12px;">· ${a.territory}</span></div>
+      <div class="meta">${a.trend}</div>
+      <div class="playbook" id="pb-${i}">
+        ${a.delta<0 ? `<b>Recovery playbook triggered:</b>
+        <ol>
+          <li>Immediate scientific detailing visit scheduled this week</li>
+          <li>Additional sample allocation released to MR</li>
+          <li>CME invitation sent — target: within 7 days</li>
+          <li>Follow-up visit auto-scheduled for day 14</li>
+        </ol>` : `<b>Reinforcement plan:</b>
+        <ol>
+          <li>Maintain current visit cadence — no disruption</li>
+          <li>Flag for advocacy / KOL development track</li>
+          <li>Offer as reference site for peer CME</li>
+        </ol>`}
+      </div>
+    </div>
+    <div class="delta ${a.delta<0?'down':'up'}">${a.delta>0?'+':''}${a.delta}%</div>
+  </div>
+`).join('');
+feed.querySelectorAll('.alert').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.getElementById('pb-'+el.dataset.i).classList.toggle('open');
+  });
+});
+
+// ================= MODULE 03: FORECAST =================
+let forecastChart;
+function renderForecast(){
+  const growth = +document.getElementById('growthAssume').value;
+  const lead = +document.getElementById('leadTime').value;
+  document.getElementById('growthAssumeVal').textContent = (growth>=0?'+':'')+growth+'%';
+  document.getElementById('leadTimeVal').textContent = lead;
+
+  const weeks = Array.from({length:14}, (_,i)=>'W'+(i+1));
+  const base = [40,42,39,45,48,44,50,53,49,55,58,54,60,63];
+  const forecast = base.map((v,i)=> i<8 ? null : Math.round(v * (1+growth/100)));
+  const actual = base.map((v,i)=> i<8 ? v : null);
+  const stockLevel = [80,74,70,64,58,52,44,38,60,54,46,38,30,22];
+
+  const ctx = document.getElementById('forecastChart');
+  if(forecastChart) forecastChart.destroy();
+  forecastChart = new Chart(ctx, {
+    type:'line',
+    data:{ labels: weeks,
+      datasets:[
+        {label:'Actual demand (units)', data:actual, borderColor:'#5E8266', backgroundColor:'rgba(94,130,102,0.15)', tension:0.35, spanGaps:false},
+        {label:'AI forecast', data:forecast, borderColor:'#C79A34', borderDash:[5,4], tension:0.35, spanGaps:false},
+        {label:'Distributor stock', data:stockLevel, borderColor:'#A85238', backgroundColor:'transparent', borderWidth:1.5, tension:0.3}
+      ]},
+    options:{
+      responsive:true,
+      plugins:{ legend:{ labels:{ color:'rgba(245,242,234,0.7)', font:{family:'IBM Plex Mono', size:11} } } },
+      scales:{
+        x:{ ticks:{color:'rgba(245,242,234,0.4)', font:{size:10}}, grid:{color:'rgba(245,242,234,0.05)'} },
+        y:{ ticks:{color:'rgba(245,242,234,0.4)', font:{size:10}}, grid:{color:'rgba(245,242,234,0.05)'} }
+      }
+    }
+  });
+
+  const flags = document.getElementById('stockFlags');
+  const reorderWeek = 10 - Math.floor(lead/2);
+  flags.innerHTML = `<div class="flag">⚠ Reorder trigger: place distributor order by week ${reorderWeek} (${lead}-wk lead buffer)</div>
+  <div class="flag">⚠ Projected stock-out risk: week 13–14 if reorder delayed</div>`;
+}
+['growthAssume','leadTime'].forEach(id=>document.getElementById(id).addEventListener('input', renderForecast));
+renderForecast();
+
+// ================= MODULE 04: DETAILING =================
+const detailProfiles = {
+  'Dr. Hasika Ravula': {spec:'Corneal Surgeon — Nayana Eye Care', profile:'18 glaucoma pts/wk, already on MISOPT, high preference on efficacy & tolerability', points:['Reinforce with recent tolerability data to sustain preference','Offer bundled patient-education leaflets for clinic waiting room','Position as MISOPT reference site for peer discussion'], mode:'In-clinic + tablet detail'},
+  'Dr. Sriram Ravula': {spec:'Ophthalmologist & Eye Surgeon — Suryaraopet', profile:'25 glaucoma pts/wk, currently Dorzox on brand familiarity — highest-volume conversion target', points:['Lead with head-to-head efficacy vs. Dorzox','Offer trial starter kit for next 10 new patients','Short-cycle follow-up in 2 weeks to lock in trial'], mode:'Rep visit + starter samples'},
+  'Dr. Rajendra Krishna Murthy Metlapalli': {spec:'Ophthalmologist — Srikiran Eye Hospital', profile:'30 glaucoma pts/wk, MISOPT high preference on clinical response — largest retain-and-grow account', points:['Send latest peer-reviewed efficacy data ahead of visit','Invite as speaker/reference for regional CME','Offer participation in post-marketing observational study'], mode:'Scientific e-detail (email + PDF)'},
+  'Dr. B. Subba Rao': {spec:'Ophthalmologist — SK Superspeciality Hospital', profile:'32 glaucoma pts/wk, Dorzox on established-brand inertia — highest-volume conversion opportunity', points:['Open with differentiation vs. Dorzox on efficacy + tolerability','Share peer-adoption data from similar-profile clinics','Invite to regional CME to build MISOPT familiarity'], mode:'WhatsApp digital detail'},
+  'Dr. Sri Monica A': {spec:'Ophthalmologist — Vasan Eye Care Hospital', profile:'29 glaucoma pts/wk, MISOPT high preference on efficacy + availability', points:['Reinforce availability/supply assurance messaging','Reference elderly-tolerability safety profile','Offer bundled patient-education leaflets'], mode:'In-clinic + tablet detail'}
+};
+const picker = document.getElementById('detailPicker');
+picker.innerHTML = Object.keys(detailProfiles).map((n,i)=>`<div class="doctor-chip ${i===0?'active':''}" data-name="${n}">${n}</div>`).join('');
+function renderDetail(name){
+  const d = detailProfiles[name];
+  document.getElementById('detailOutput').innerHTML = `
+    <div class="card">
+      <h3>${name}</h3>
+      <div class="sub">${d.spec}</div>
+      <p style="font-size:13.5px; color:rgba(245,242,234,0.7);">${d.profile}</p>
+      <p class="mono" style="font-size:11px; color:var(--gold); margin-top:14px;">RECOMMENDED CHANNEL: ${d.mode}</p>
+    </div>
+    <div class="card">
+      <h3>Detail message plan</h3>
+      <div class="sub">Auto-generated from specialty + Rx history</div>
+      <ul>${d.points.map(p=>`<li>${p}</li>`).join('')}</ul>
+    </div>`;
+}
+picker.querySelectorAll('.doctor-chip').forEach(c=>{
+  c.addEventListener('click', ()=>{
+    picker.querySelectorAll('.doctor-chip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+    renderDetail(c.dataset.name);
+  });
+});
+renderDetail(Object.keys(detailProfiles)[0]);
+
+// ================= MODULE 05: WHATSAPP BOT =================
+const chatWindow = document.getElementById('chatWindow');
+const flows = {
+  refill: [
+    {who:'bot', text:'Hi Priya 👋 Your glaucoma eye drop should last about 5 more days based on your last refill.'},
+    {who:'bot', text:'Would you like us to notify your pharmacy to prepare a refill?'},
+    {who:'user', text:'Yes please'},
+    {who:'bot', text:'Done ✅ Your pharmacy has been notified. Please collect within 3 days.'}
+  ],
+  withdraw: [
+    {who:'bot', text:'Hi Priya, we noticed it\'s been 10 days since your last recorded dose.'},
+    {who:'bot', text:'Is everything okay? Missing doses can raise eye pressure without symptoms.'},
+    {who:'user', text:'I ran out, forgot to reorder'},
+    {who:'bot', text:'No worries — reorder started, and we\'ve flagged this to your doctor\'s clinic for a quick check-in call.'}
+  ],
+  pap: [
+    {who:'user', text:'Can I get help with the cost of my medicine?'},
+    {who:'bot', text:'Yes — you may be eligible for our Patient Assistance Program based on your prescription.'},
+    {who:'bot', text:'I\'ll send you a short 3-question eligibility form now.'},
+    {who:'user', text:'Sent it, thank you!'},
+    {who:'bot', text:'Received ✅ Our support team will confirm your eligibility within 48 hours.'}
+  ]
+};
+function playFlow(key){
+  chatWindow.innerHTML = '';
+  flows[key].forEach((m,i)=>{
+    setTimeout(()=>{
+      const b = document.createElement('div');
+      b.className = 'bubble '+(m.who==='bot'?'bot':'user');
+      b.textContent = m.text;
+      chatWindow.appendChild(b);
+      chatWindow.scrollTop = chatWindow.scrollHeight;
+    }, i*550);
+  });
+}
+document.querySelectorAll('[data-flow]').forEach(btn=>{
+  btn.addEventListener('click', ()=>playFlow(btn.dataset.flow));
+});
+playFlow('refill');
+
+// ================= MODULE 06: SOCIAL LISTENING =================
+const mentions = [
+  {src:'Patient Forum', txt:'Started noticing my eyes sting a lot right after using the drops, wondering if that\'s normal or if I should call my doctor.', tag:'adr', tagLabel:'ADR signal'},
+  {src:'FB Glaucoma Group', txt:'Been on this for 8 months now, honestly prefer it over my old drops — way less irritation and I never miss a dose since it\'s once daily.', tag:'pref', tagLabel:'Patient preference'},
+  {src:'X / Twitter', txt:'My ophthalmologist mentioned a newer combination drop that\'s supposed to work for people who don\'t respond to first-line therapy.', tag:'unmet', tagLabel:'Unmet need'},
+  {src:'HCP Community', txt:'Seeing more patients ask about the competitor brand\'s copay card lately — might be worth reviewing our own patient support offer.', tag:'comp', tagLabel:'Competitor signal'},
+  {src:'Doctor Discussion', txt:'A few of my patients with advanced field loss aren\'t getting adequate control even on max-tolerated dose combinations.', tag:'unmet', tagLabel:'Unmet need'},
+  {src:'Patient Forum', txt:'Woke up with blurry vision for about an hour after the evening dose, first time this has happened in 3 months of use.', tag:'adr', tagLabel:'ADR signal'},
+];
+document.getElementById('listenFeed').innerHTML = mentions.map(m=>`
+  <div class="listen-item">
+    <div class="src">${m.src}</div>
+    <div class="txt">${m.txt}</div>
+    <div class="tag ${m.tag}">${m.tagLabel}</div>
+  </div>
+`).join('');
+
+// ================= MODULE 07: RCPA — KAKINADA (primary field audit) =================
+const chemists = [
+  {name:'Keerthy Medical Stores Pvt Ltd', locality:'Bhanugudi', total:38, misopt:9, dorzox:18, dortas:5, dorsun:4, other:2},
+  {name:'Apollo Pharmacy Subhash Road', locality:'Surya Rao Peta', total:32, misopt:7, dorzox:16, dortas:4, dorsun:3, other:2},
+  {name:'Kakinada Pharmacy', locality:'Pulavarthi Vari St', total:30, misopt:7, dorzox:14, dortas:4, dorsun:3, other:2},
+  {name:'Apollo Pharmacy Ramaraopet', locality:'Ramaraopeta', total:35, misopt:8, dorzox:17, dortas:4, dorsun:4, other:2},
+  {name:'Murali Medical Stores', locality:'Masjid Junction', total:28, misopt:6, dorzox:13, dortas:4, dorsun:3, other:2},
+  {name:'Apollo Pharmacy 100 Building Centre', locality:'100 Building Centre', total:25, misopt:5, dorzox:12, dortas:4, dorsun:2, other:2},
+  {name:'Yarras Generic Medicals', locality:'Ramaraopeta', total:27, misopt:5, dorzox:13, dortas:4, dorsun:3, other:2},
+  {name:'Apollo Pharmacy Godarigunta', locality:'Godarigunta', total:31, misopt:7, dorzox:15, dortas:4, dorsun:3, other:2},
+  {name:'Medplus Cinema Road', locality:'Cinema Road', total:29, misopt:7, dorzox:14, dortas:4, dorsun:2, other:2},
+  {name:'Apollo Pharmacy Indrapalem', locality:'Indrapalem', total:24, misopt:5, dorzox:11, dortas:4, dorsun:2, other:2},
+  {name:'RRR Medical & General Stores', locality:'Ramakrishna Rao Peta', total:26, misopt:6, dorzox:12, dortas:3, dorsun:3, other:2},
+  {name:'MedPlus Pharmacy', locality:'Venkata Nagar', total:23, misopt:5, dorzox:11, dortas:3, dorsun:2, other:2},
+  {name:'Apollo Pharmacy Kakinada', locality:'Rama Rao Peta', total:36, misopt:9, dorzox:17, dortas:4, dorsun:4, other:2},
+  {name:'MedPlus Indra Palem Main Road', locality:'Indrapalem', total:28, misopt:6, dorzox:13, dortas:4, dorsun:3, other:2},
+  {name:'Trinethra Pharmacy', locality:'Masjid Centre', total:30, misopt:7, dorzox:14, dortas:4, dorsun:3, other:2},
+  {name:'Apollo Pharmacy Rama Rao Peta III', locality:'Rama Rao Peta', total:33, misopt:8, dorzox:16, dortas:4, dorsun:3, other:2},
+  {name:'Ramanadha Medical Shop', locality:'Suryanarayana Puram', total:22, misopt:5, dorzox:10, dortas:3, dorsun:2, other:2},
+  {name:'Venus Medical Stores', locality:'Pulavarthi Vari St', total:34, misopt:8, dorzox:16, dortas:5, dorsun:3, other:2},
+  {name:'Apollo Pharmacy Dairy Farm Centre', locality:'Dairy Farm Centre', total:27, misopt:6, dorzox:13, dortas:3, dorsun:3, other:2},
+  {name:'Local Independent Pharmacy', locality:'Jagannadhapuram', total:25, misopt:5, dorzox:12, dortas:3, dorsun:3, other:2},
+];
+chemists.forEach(c=>{ c.tier = c.total>=30 ? 'A' : c.total>=24 ? 'B' : 'C'; });
+
+function renderRCPAStats(){
+  const totalRx = chemists.reduce((s,c)=>s+c.total,0);
+  const totalMisopt = chemists.reduce((s,c)=>s+c.misopt,0);
+  const totalDorzox = chemists.reduce((s,c)=>s+c.dorzox,0);
+  const avgShare = Math.round(totalMisopt/totalRx*100);
+  document.getElementById('rcpaStats').innerHTML = `
+    <div class="stat"><div class="n">${chemists.length}</div><div class="l">Chemists audited this cycle</div></div>
+    <div class="stat"><div class="n">${totalRx}</div><div class="l">Total glaucoma Rx captured</div></div>
+    <div class="stat"><div class="n" style="color:#5E8266;">${avgShare}%</div><div class="l">MISOPT share of total Rx</div></div>
+    <div class="stat"><div class="n" style="color:#A85238;">${Math.round(totalDorzox/totalRx*100)}%</div><div class="l">Dorzox share (lead competitor)</div></div>`;
+}
+function renderRCPATable(filter){
+  const rows = chemists.filter(c=>filter==='all'||c.tier===filter);
+  document.getElementById('rcpaTable').innerHTML = rows.map(c=>{
+    const share = Math.round(c.misopt/c.total*100);
+    return `<tr class="tier-${c.tier}">
+      <td>${c.name}</td>
+      <td style="color:rgba(245,242,234,0.5); font-size:12px;">${c.locality}</td>
+      <td><span class="tier-badge ${c.tier}">Class ${c.tier}</span></td>
+      <td>${c.total}</td>
+      <td style="color:#5E8266;">${c.misopt}</td>
+      <td style="color:#A85238;">${c.dorzox}</td>
+      <td>${c.dortas}</td><td>${c.dorsun}</td><td>${c.other}</td>
+      <td class="mono" style="font-size:12px;">${share}%</td>
+    </tr>`;
+  }).join('');
+}
+document.querySelectorAll('.rcpa-filter').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.rcpa-filter').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    renderRCPATable(btn.dataset.tier);
+  });
+});
+renderRCPAStats();
+renderRCPATable('all');
+
+// ================= MODULE 08: DIGITAL HCP ENGAGEMENT — KAKINADA =================
+document.getElementById('digitalStats').innerHTML = `
+  <div class="stat"><div class="n">68%</div><div class="l">Digital → physical visit conversion</div></div>
+  <div class="stat"><div class="n">74</div><div class="l">HCPs on virtual CME (last session)</div></div>
+  <div class="stat"><div class="n">41</div><div class="l">E-samples redeemed (30d)</div></div>
+  <div class="stat"><div class="n">3.2 days</div><div class="l">RCPA flag → digital touch cycle time</div></div>`;
+
+const digitalQueueItems = [
+  {name:'Dr. Sriram Ravula', trigger:'Dorzox-loyal, 25 pts/wk — RCPA shows Dorzox ~2x MISOPT at nearby Suryaraopet chemists', action:'WhatsApp head-to-head efficacy detail + starter sample offer sent', level:'alert'},
+  {name:'Dr. B. Subba Rao', trigger:'Dorzox-loyal, 32 pts/wk — highest-volume conversion target in territory', action:'CME invite queued for next regional session', level:'alert'},
+  {name:'Dr. S. Veerabhadra Raju', trigger:'Dorzox-loyal, 35 pts/wk — Apollo Hospitals network, brand-confidence objection', action:'E-sample QR link + peer-adoption data sent via WhatsApp', level:'warn'},
+  {name:'Dr. Rajendra Krishna Murthy Metlapalli', trigger:'MISOPT high preference, 30 pts/wk — stable, top retain-and-grow account', action:'No digital touch needed — maintain visit cadence, position as reference site', level:'info'},
+];
+document.getElementById('digitalQueue').innerHTML = digitalQueueItems.map(d=>`
+  <div class="alert ${d.level}" style="cursor:default;">
+    <div>
+      <div class="name">${d.name}</div>
+      <div class="meta">${d.trigger}</div>
+      <div class="meta" style="color:${d.level==='info'?'rgba(245,242,234,0.4)':'var(--gold)'}; margin-top:4px;">→ ${d.action}</div>
+    </div>
+  </div>`).join('');
+
+new Chart(document.getElementById('digitalChart'), {
+  type:'bar',
+  data:{
+    labels:['WhatsApp detail','Virtual CME','E-sampling','In-clinic visit'],
+    datasets:[{ label:'Touches (30d)', data:[210, 74, 41, 96], backgroundColor:['#5E8266','#C79A34','#31575B','#A85238'] }]
+  },
+  options:{
+    responsive:true,
+    plugins:{ legend:{ display:false } },
+    scales:{
+      x:{ ticks:{color:'rgba(245,242,234,0.6)', font:{family:'IBM Plex Mono', size:10}}, grid:{display:false} },
+      y:{ ticks:{color:'rgba(245,242,234,0.4)', font:{size:10}}, grid:{color:'rgba(245,242,234,0.05)'} }
+    }
+  }
+});
+</script>
+</body>
+</html>
